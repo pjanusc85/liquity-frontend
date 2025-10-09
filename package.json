@@ -4,6 +4,9 @@
   "scripts": {
     "build": "npm install --prefix uikit && npm run build --prefix uikit && npm install --prefix app && npm run build --prefix app"
   },
+  "dependencies": {
+    "next": "15.3.4"
+  },
   "devDependencies": {
     "next": "15.3.4"
   }
