@@ -1,4 +1,4 @@
 {
-  "buildCommand": "pwd && ls -la && cd uikit && pwd && ls -la && npm install && npm run build && cd ../app && pwd && npm install && npm run build",
+  "buildCommand": "cd uikit && npm ci && npm run build && cd ../app && npm ci && npm run build",
   "outputDirectory": "app/out"
 }
