@@ -1,0 +1,9 @@
+# Build outputs
+out/
+package-lock.json
+
+# Local settings
+.claude/settings.local.json
+
+# Generated GraphQL types (if auto-generated)
+src/graphql/graphql.ts
