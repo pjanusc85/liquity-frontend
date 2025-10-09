@@ -1,4 +1,5 @@
 {
-  "buildCommand": "cd uikit && npm ci && npm run build && cd ../app && npm ci && npm run build",
-  "outputDirectory": "app/out"
+  "buildCommand": "cd uikit && npm install && npm run build && cd ../app && npm install && npm run build",
+  "outputDirectory": "app/out",
+  "framework": null
 }
