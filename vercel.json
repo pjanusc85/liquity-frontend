@@ -1,4 +1,4 @@
 {
-  "buildCommand": "cd .. && npm install --prefix uikit && npm run build --prefix uikit && cd app && npm install && npm run build",
-  "outputDirectory": "out"
+  "buildCommand": "cd uikit && npm install && npm run build && cd ../app && npm install && npm run build",
+  "outputDirectory": "app/out"
 }
