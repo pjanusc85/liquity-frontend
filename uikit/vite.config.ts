@@ -32,6 +32,8 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    dts(),
+    dts({
+      skipDiagnostics: true,
+    }),
   ],
 });

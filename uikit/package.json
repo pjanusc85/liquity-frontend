@@ -42,11 +42,12 @@
     }
   },
   "scripts": {
-    "build": "npm run build-panda && tsc && vite build",
+    "build": "npm run build-panda && vite build",
     "build-deps": "npm run build-panda",
     "build-panda": "panda codegen --silent",
     "dev": "vite build --watch",
     "lint": "oxlint ./src",
+    "typecheck": "tsc",
     "update-icons": "tsx scripts/update-icons.ts"
   },
   "peerDependencies": {
