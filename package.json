@@ -1,0 +1,7 @@
+{
+  "name": "@liquity2/frontend",
+  "private": true,
+  "scripts": {
+    "build": "npm install --prefix uikit && npm run build --prefix uikit && npm install --prefix app && npm run build --prefix app"
+  }
+}
