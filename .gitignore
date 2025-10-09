@@ -1,8 +1,9 @@
-/node_modules
+# Dependencies
+node_modules/
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
 
 # vercel
@@ -15,18 +16,25 @@
 # local env files
 .env
 .env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
 # panda
-/styled-system/
-/styled-system-static/
-
+styled-system/
+styled-system-static/
 
 # graphclient
-/.graphclient/
+.graphclient/
 
 # custom banner
-/Banner.tsx
+Banner.tsx
+
+# Build outputs
+dist/
+build/
+
+# uikit-gallery (optional, remove if you want to track it)
+uikit-gallery/

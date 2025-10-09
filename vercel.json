@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd app && npm run build",
+  "outputDirectory": "app/.next",
+  "installCommand": "cd uikit && npm install && npm run build && cd ../app && npm install"
+}
