@@ -6,6 +6,7 @@ export function generateStaticParams() {
     { pool: "eth" },
     { pool: "reth" },
     { pool: "wsteth" },
+    { pool: "cbbtc" },
     { pool: "sbold" },
   ];
 }
@@ -14,7 +15,7 @@ export default async function Layout({
   params,
 }: {
   params: Promise<{
-    pool: "eth" | "reth" | "wsteth" | "sbold";
+    pool: "eth" | "reth" | "wsteth" | "cbbtc" | "sbold";
   }>;
 }) {
   const { pool } = await params;

@@ -5,6 +5,13 @@ import * as dn from "dnum";
 export const DNUM_0 = dn.from(0, 18);
 export const DNUM_1 = dn.from(1, 18);
 
+export function dnum8(value: null | undefined): null;
+export function dnum8(value: string | bigint | number): Dnum;
+export function dnum8(value: string | bigint | number | null | undefined): Dnum | null;
+export function dnum8(value: string | bigint | number | null | undefined): Dnum | null {
+  return value === undefined || value === null ? null : [BigInt(value), 8];
+}
+
 export function dnum18(value: null | undefined): null;
 export function dnum18(value: string | bigint | number): Dnum;
 export function dnum18(value: string | bigint | number | null | undefined): Dnum | null;

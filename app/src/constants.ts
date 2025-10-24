@@ -74,6 +74,7 @@ export const MAX_COLLATERAL_DEPOSITS: Record<CollateralSymbol, dn.Dnum> = {
   ETH: dn.from(100_000_000n, 18),
   WSTETH: dn.from(100_000_000n, 18),
   RETH: dn.from(100_000_000n, 18),
+  CBBTC: dn.from(100_000_000n, 18),
 };
 
 // DEBT suggestions, as ratios of the max LTV
