@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/Paulcalinawa/Documents/bold-projects/frontend/**)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nRestructure repository for Vercel deployment\n\n- Move git repository from app/ to frontend/ root to include uikit\n- Replace workspace:* dependency with file:../uikit\n- Update all build scripts to use npm instead of pnpm\n- Add .npmrc files to handle legacy peer dependencies\n- Add vercel.json configuration for proper build\n- Update .gitignore for new directory structure\n\nThis enables Vercel to build both app and uikit dependencies.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run build:*)",
+      "Read(//Users/Paulcalinawa/Documents/bold-projects/bold/contracts/addresses/**)",
+      "Bash(git restore:*)",
+      "Bash(git rm:*)",
+      "Bash(npm ci:*)",
+      "Bash(pnpm:*)",
+      "Bash(npm:*)",
+      "Bash(readlink:*)",
+      "Bash(node:*)",
+      "Read(//Users/Paulcalinawa/Desktop/**)",
+      "Bash(curl:*)",
+      "Read(//Users/Paulcalinawa/Documents/bold-projects/bold/frontend/app/src/comps/ConnectWarningBox/**)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Read(//Users/Paulcalinawa/Documents/bold-projects/bold/frontend/app/public/**)",
+      "Read(//Users/Paulcalinawa/Documents/bold-projects/bold/frontend/app/src/**)",
+      "Read(//Users/Paulcalinawa/Documents/bold-projects/bold/frontend/app/**)",
+      "WebFetch(domain:docs.liquity.org)",
+      "WebFetch(domain:liquity2-sepolia.vercel.app)",
+      "WebFetch(domain:sepolia.etherscan.io)",
+      "Bash(cast tx:*)",
+      "Bash(if [ -f .env ])",
+      "Bash(then cp .env .env.backup)",
+      "Bash(else echo \"No .env file found\")",
+      "Bash(fi)",
+      "WebFetch(domain:github.com)",
+      "Bash(cat:*)",
+      "Bash(ps:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

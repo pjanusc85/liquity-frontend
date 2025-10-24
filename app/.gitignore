@@ -1,9 +1,31 @@
-# Build outputs
-out/
-package-lock.json
+/node_modules
+/coverage
 
-# Local settings
-.claude/settings.local.json
+# next.js
+/.next/
+/out/
 
-# Generated GraphQL types (if auto-generated)
-src/graphql/graphql.ts
+# vercel
+.vercel
+
+# misc
+.DS_Store
+*.pem
+
+# local env files
+.env.*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# panda
+/styled-system/
+/styled-system-static/
+
+
+# graphclient
+/.graphclient/
+
+# custom banner
+/Banner.tsx

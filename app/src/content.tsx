@@ -508,6 +508,24 @@ export default {
   },
 } as const;
 
+function Link({
+  href,
+  children,
+}: {
+  href: string;
+  children: N;
+}) {
+  const props = !href.startsWith("http") ? {} : {
+    target: "_blank",
+    rel: "noopener noreferrer",
+  };
+  return (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  );
+}
+
 function NoWrap({
   children,
   gap = 8,

@@ -11,7 +11,7 @@ const APP_COMMIT_HASH_FROM_BUILD = String(execSync(
   commitHashCmd + " -- ./ ../uikit/",
 )).trim();
 const CONTRACTS_COMMIT_HASH_FROM_BUILD = String(execSync(
-  commitHashCmd + " -- ../contracts/addresses/11155111.json",
+  commitHashCmd + " -- ../../contracts/addresses/11155111.json",
 )).trim();
 
 /** @type {import('next').NextConfig} */
