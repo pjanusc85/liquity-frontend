@@ -12,7 +12,7 @@ import { RedemptionInfo } from "@/src/comps/RedemptionInfo/RedemptionInfo";
 import { Screen } from "@/src/comps/Screen/Screen";
 import { ETH_MAX_RESERVE, LEVERAGE_FACTOR_DEFAULT, MAX_COLLATERAL_DEPOSITS } from "@/src/constants";
 import content from "@/src/content";
-import { dnum18, DNUM_0, dnumMax } from "@/src/dnum-utils";
+import { DNUM_0, dnumMax } from "@/src/dnum-utils";
 import { useInputFieldValue } from "@/src/form-utils";
 import { fmtnum } from "@/src/formatting";
 import {
