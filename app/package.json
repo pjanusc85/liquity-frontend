@@ -9,7 +9,7 @@
     "build": "npm run build-deps && npm run clean && next build",
     "build-analyze": "ANALYZE=true npm run build",
     "build-banner": "test -f ./Banner.tsx || cp ./Banner.example.tsx ./Banner.tsx",
-    "build-deps": "npm run build-graphql && npm run build-uikit && npm run build-banner && npm run build-panda",
+    "build-deps": "npm run build-uikit && npm run build-banner && npm run build-panda",
     "build-graphql": "graphql-codegen --config graphql-codegen.ts",
     "build-panda": "panda codegen --silent",
     "build-uikit": "cd ../uikit && npm run build",
