@@ -16,6 +16,7 @@ export type ExternalToken = {
 
 // a token with a known symbol (TokenSymbol)
 export type Token = ExternalToken & {
+  decimals: number;
   icon: string;
   name: string;
   symbol: TokenSymbol;
@@ -68,24 +69,28 @@ export type CollateralToken = Token & {
 };
 
 export const LUSD: Token = {
+  decimals: 18,
   icon: tokenLusd,
   name: "LUSD",
   symbol: "LUSD" as const,
 } as const;
 
 export const BOLD: Token = {
+  decimals: 18,
   icon: tokenBold,
   name: "BOLD",
   symbol: "BOLD" as const,
 } as const;
 
 export const LQTY: Token = {
+  decimals: 18,
   icon: tokenLqty,
   name: "LQTY",
   symbol: "LQTY" as const,
 } as const;
 
 export const SBOLD: Token = {
+  decimals: 18,
   icon: tokenSbold,
   name: "sBOLD",
   symbol: "SBOLD" as const,
@@ -93,6 +98,7 @@ export const SBOLD: Token = {
 
 export const ETH: CollateralToken = {
   collateralRatio: 1.1,
+  decimals: 18,
   icon: tokenEth,
   name: "ETH",
   symbol: "ETH" as const,
@@ -100,6 +106,7 @@ export const ETH: CollateralToken = {
 
 export const RETH: CollateralToken = {
   collateralRatio: 1.2,
+  decimals: 18,
   icon: tokenReth,
   name: "rETH",
   symbol: "RETH" as const,
@@ -107,6 +114,7 @@ export const RETH: CollateralToken = {
 
 export const WSTETH: CollateralToken = {
   collateralRatio: 1.2,
+  decimals: 18,
   icon: tokenSteth,
   name: "wstETH",
   symbol: "WSTETH" as const,
@@ -114,6 +122,7 @@ export const WSTETH: CollateralToken = {
 
 export const CBBTC: CollateralToken = {
   collateralRatio: 1.25,
+  decimals: 8,
   icon: tokenCbbtc,
   name: "cbBTC",
   symbol: "CBBTC" as const,

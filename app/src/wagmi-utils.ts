@@ -3,11 +3,12 @@ import type { Address } from "@liquity2/uikit";
 
 import { dnum18 } from "@/src/dnum-utils";
 import { CONTRACT_BOLD_TOKEN, CONTRACT_LQTY_TOKEN, CONTRACT_LUSD_TOKEN } from "@/src/env";
-import { getBranch } from "@/src/liquity-utils";
+import { getBranch, getToken } from "@/src/liquity-utils";
 import { getSafeStatus } from "@/src/safe-utils";
 import { isCollateralSymbol } from "@liquity2/uikit";
 import { useQuery } from "@tanstack/react-query";
 import { useModal as useConnectKitModal } from "connectkit";
+import * as dn from "dnum";
 import { match } from "ts-pattern";
 import { erc20Abi } from "viem";
 import { useAccount as useWagmiAccount, useBalance as useWagmiBalance, useEnsName, useReadContracts } from 'wagmi';
@@ -77,9 +78,13 @@ export function useBalances(
 
   // combine results
   return tokens.reduce((result, token) => {
+    // Get the decimals for this token
+    const tokenInfo = getToken(token);
+    const decimals = tokenInfo.decimals;
+
     if (token === "ETH") {
       result[token] = {
-        data: ethBalance.data ? dnum18(ethBalance.data.value) : undefined,
+        data: ethBalance.data ? dn.from(ethBalance.data.value, decimals) : undefined,
         isLoading: ethBalance.isLoading,
       };
     } else {
@@ -87,7 +92,7 @@ export function useBalances(
       if (erc20Index !== -1) {
         const balance = erc20Balances.data?.[erc20Index];
         result[token] = {
-          data: balance?.result !== undefined ? dnum18(balance.result) : undefined,
+          data: balance?.result !== undefined ? dn.from(balance.result, decimals) : undefined,
           isLoading: erc20Balances.isLoading,
         };
       }

@@ -26,6 +26,14 @@ export function dnum36(value: string | bigint | number | null | undefined): Dnum
   return value === undefined || value === null ? null : [BigInt(value), 36];
 }
 
+// Helper function to create a dnum with custom decimals
+export function dnumFrom(value: null | undefined, decimals: number): null;
+export function dnumFrom(value: string | bigint | number, decimals: number): Dnum;
+export function dnumFrom(value: string | bigint | number | null | undefined, decimals: number): Dnum | null;
+export function dnumFrom(value: string | bigint | number | null | undefined, decimals: number): Dnum | null {
+  return value === undefined || value === null ? null : [BigInt(value), decimals];
+}
+
 export function dnumOrNull(value: Numberish | null | undefined, decimals: number): Dnum | null {
   if (value == null || value === undefined) {
     return null;

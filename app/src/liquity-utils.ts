@@ -30,7 +30,7 @@ import {
   TROVE_STATUS_ZOMBIE,
 } from "@/src/constants";
 import { CONTRACTS, getBranchContract, getProtocolContract } from "@/src/contracts";
-import { dnum18, DNUM_0, dnumOrNull, jsonStringifyWithDnum } from "@/src/dnum-utils";
+import { dnum18, dnumFrom, DNUM_0, dnumOrNull, jsonStringifyWithDnum } from "@/src/dnum-utils";
 import { CHAIN_BLOCK_EXPLORER, ENV_BRANCHES, LEGACY_CHECK, LIQUITY_STATS_URL } from "@/src/env";
 import { getRedemptionRisk } from "@/src/liquity-math";
 import { usePrice } from "@/src/services/Prices";
@@ -100,6 +100,12 @@ export function getCollToken(branchId: BranchId | null): CollateralToken | null 
     throw new Error(`Unknown collateral symbol: ${branch.symbol}`);
   }
   return token;
+}
+
+// Helper to get the decimals for a collateral token
+export function getCollDecimals(branchId: BranchId): number {
+  const token = getCollToken(branchId);
+  return token.decimals;
 }
 
 export function getToken(symbol: CollateralSymbol): CollateralToken;
@@ -227,6 +233,8 @@ export function isEarnPositionActive(position: PositionEarn | null) {
 
 function earnPositionsContractsReadSetup(branchId: BranchId, account: Address | null) {
   const StabilityPool = getBranchContract(branchId, "StabilityPool");
+  const collDecimals = getCollDecimals(branchId);
+
   return {
     contracts: [{
       ...StabilityPool,
@@ -267,8 +275,8 @@ function earnPositionsContractsReadSetup(branchId: BranchId, account: Address | 
         rewards: {
           bold: dnum18(yieldGainWithPending),
           coll: dn.add(
-            dnum18(collGain),
-            dnum18(stashedColl),
+            dnumFrom(collGain, collDecimals),
+            dnumFrom(stashedColl, collDecimals),
           ),
         },
       } as const;
@@ -776,6 +784,7 @@ export function useBranchCollateralRatios(branchId: BranchId) {
   const wagmiConfig = useWagmiConfig();
   const collToken = getCollToken(branchId);
   const collTokenPrice = usePrice(collToken?.symbol ?? null);
+  const collDecimals = getCollDecimals(branchId);
 
   return useQuery({
     queryKey: [
@@ -808,7 +817,7 @@ export function useBranchCollateralRatios(branchId: BranchId) {
 
       // TCR = (totalCollateral * collTokenPrice) / totalDebt
       const tcr = dn.div(
-        dn.mul(dnum18(totalColl), collTokenPrice.data),
+        dn.mul(dnumFrom(totalColl, collDecimals), collTokenPrice.data),
         dnum18(totalDebt),
       );
 
@@ -980,6 +989,8 @@ export async function fetchLoanById(
     }),
   ]);
 
+  const collDecimals = getCollDecimals(branchId);
+
   return !indexedTrove ? null : {
     type: indexedTrove.mightBeLeveraged ? "multiply" : "borrow",
     batchManager: isAddressEqual(batchManager, zeroAddress) ? null : batchManager,
@@ -990,7 +1001,7 @@ export async function fetchLoanById(
     lastUserActionAt: indexedTrove.lastUserActionAt,
     updatedAt: indexedTrove.updatedAt,
     recordedDebt: indexedTrove.debt,
-    deposit: dnum18(troveData.entireColl),
+    deposit: dnumFrom(troveData.entireColl, collDecimals),
     interestRate: dnum18(troveData.annualInterestRate),
     status: indexedTrove.status,
     troveId,
