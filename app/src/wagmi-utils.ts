@@ -6,7 +6,6 @@ import { getSafeStatus } from "@/src/safe-utils";
 import { isCollateralSymbol } from "@liquity2/uikit";
 import { useQuery } from "@tanstack/react-query";
 import { useModal as useConnectKitModal } from "connectkit";
-import * as dn from "dnum";
 import { match } from "ts-pattern";
 import { erc20Abi } from "viem";
 import { useAccount as useWagmiAccount, useBalance as useWagmiBalance, useEnsName, useReadContracts } from 'wagmi';
