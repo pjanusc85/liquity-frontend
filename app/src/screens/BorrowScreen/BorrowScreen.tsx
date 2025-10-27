@@ -82,6 +82,12 @@ export function BorrowScreen() {
   const debt = useInputFieldValue(fmtnum);
 
   const [interestRate, setInterestRate] = useState<null | Dnum>(null);
+
+  // Debug wrapper
+  const setInterestRateWithLog = useCallback((rate: Dnum) => {
+    console.log("BorrowScreen: setInterestRate called with:", rate);
+    setInterestRate(rate);
+  }, []);
   const [interestRateMode, setInterestRateMode] = useState<DelegateMode>("manual");
   const [interestRateDelegate, setInterestRateDelegate] = useState<Address | null>(null);
   const [agreeToLiquidationRisk, setAgreeToLiquidationRisk] = useState(false);
@@ -90,6 +96,7 @@ export function BorrowScreen() {
 
   const setInterestRateRounded = useCallback((averageInterestRate: Dnum, setValue: (value: string) => void) => {
     const rounded = dn.div(dn.round(dn.mul(averageInterestRate, 1e4)), 1e4);
+    console.log("setInterestRateRounded called with:", averageInterestRate, "rounded:", rounded);
     setValue(dn.toString(dn.mul(rounded, 100)));
   }, [setInterestRate]);
 
@@ -104,6 +111,8 @@ export function BorrowScreen() {
   }
 
   const nextOwnerIndex = useNextOwnerIndex(account.address ?? null, branch.id);
+  // Use fallback value of 0 when subgraph query fails (e.g., due to rate limiting)
+  const ownerIndexValue = nextOwnerIndex.data ?? 0;
   const redemptionRisk = useRedemptionRiskOfInterestRate(branch.id, interestRate ?? DNUM_0);
 
   const loanDetails = getLoanDetails(
@@ -180,6 +189,45 @@ export function BorrowScreen() {
     && !isBelowMinDebt
     && !isAboveMaxLtv
     && (loanDetails.status !== "at-risk" || (!isDelegated && agreeToLiquidationRisk));
+
+  const requestReady = !!(
+    interestRate
+    && deposit.parsed
+    && debt.parsed
+    && account.address
+  );
+
+  const flowRequest = requestReady && account.address
+    ? {
+      flowId: "openBorrowPosition" as const,
+      backLink: [
+        `/borrow/${collSymbol.toLowerCase()}`,
+        "Back to editing",
+      ] as [string, string],
+      successLink: ["/", "Go to the Dashboard"] as [string, string],
+      successMessage: "The position has been created successfully.",
+
+      branchId: branch.id,
+      owner: account.address,
+      ownerIndex: ownerIndexValue,
+      collAmount: deposit.parsed!,
+      boldAmount: debt.parsed!,
+      annualInterestRate: interestRate!,
+      maxUpfrontFee: dnum18(maxUint256),
+      interestRateDelegate: interestRateMode === "manual" || !interestRateDelegate
+        ? null
+        : interestRateDelegate,
+    }
+    : undefined;
+
+  console.log("=== BUTTON STATE DEBUG ===");
+  console.log("allowSubmit:", allowSubmit);
+  console.log("account.address:", account.address);
+  console.log("nextOwnerIndex.data:", nextOwnerIndex.data);
+  console.log("ownerIndexValue (with fallback):", ownerIndexValue);
+  console.log("requestReady:", requestReady);
+  console.log("flowRequest:", flowRequest ? "DEFINED" : "UNDEFINED");
+  console.log("========================");
 
   return (
     <Screen
@@ -384,7 +432,7 @@ export function BorrowScreen() {
             interestRate={interestRate}
             mode={interestRateMode}
             onAverageInterestRateLoad={setInterestRateRounded}
-            onChange={setInterestRate}
+            onChange={setInterestRateWithLog}
             onDelegateChange={setInterestRateDelegate}
             onModeChange={setInterestRateMode}
           />
@@ -641,32 +689,7 @@ export function BorrowScreen() {
       <FlowButton
         disabled={!allowSubmit}
         label={content.borrowScreen.action}
-        request={interestRate
-            && deposit.parsed
-            && debt.parsed
-            && account.address
-            && typeof nextOwnerIndex.data === "number"
-          ? {
-            flowId: "openBorrowPosition",
-            backLink: [
-              `/borrow/${collSymbol.toLowerCase()}`,
-              "Back to editing",
-            ],
-            successLink: ["/", "Go to the Dashboard"],
-            successMessage: "The position has been created successfully.",
-
-            branchId: branch.id,
-            owner: account.address,
-            ownerIndex: nextOwnerIndex.data,
-            collAmount: deposit.parsed,
-            boldAmount: debt.parsed,
-            annualInterestRate: interestRate,
-            maxUpfrontFee: dnum18(maxUint256),
-            interestRateDelegate: interestRateMode === "manual" || !interestRateDelegate
-              ? null
-              : interestRateDelegate,
-          }
-          : undefined}
+        request={flowRequest}
       />
     </Screen>
   );
