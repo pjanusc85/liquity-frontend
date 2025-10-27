@@ -1,7 +1,5 @@
 import type { Dnum, Token } from "@/src/types";
 import type { Address } from "@liquity2/uikit";
-
-import { dnum18 } from "@/src/dnum-utils";
 import { CONTRACT_BOLD_TOKEN, CONTRACT_LQTY_TOKEN, CONTRACT_LUSD_TOKEN } from "@/src/env";
 import { getBranch, getToken } from "@/src/liquity-utils";
 import { getSafeStatus } from "@/src/safe-utils";
