@@ -77,11 +77,13 @@ export function useBalances(
   return tokens.reduce((result, token) => {
     // Get the decimals for this token
     const tokenInfo = getToken(token);
-    const decimals = tokenInfo.decimals;
+    const decimals = tokenInfo?.decimals ?? 18; // Default to 18 if undefined
+
+    console.log("Token:", token, "Decimals:", decimals, "TokenInfo:", tokenInfo);
 
     if (token === "ETH") {
       result[token] = {
-        data: ethBalance.data ? [ethBalance.data.value, decimals] : undefined,
+        data: ethBalance.data ? [BigInt(ethBalance.data.value), decimals] : undefined,
         isLoading: ethBalance.isLoading,
       };
     } else {
@@ -89,7 +91,7 @@ export function useBalances(
       if (erc20Index !== -1) {
         const balance = erc20Balances.data?.[erc20Index];
         result[token] = {
-          data: balance?.result !== undefined ? [balance.result, decimals] : undefined,
+          data: balance?.result !== undefined ? [BigInt(balance.result), decimals] : undefined,
           isLoading: erc20Balances.isLoading,
         };
       }

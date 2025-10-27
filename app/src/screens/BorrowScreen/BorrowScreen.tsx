@@ -149,14 +149,22 @@ export function BorrowScreen() {
     })
     : null;
 
-  const maxAmount = collBalance.data && dnumMin(
-    maxCollDeposit,
-    dnumMax(
-      // Only keep a reserve for ETH, not LSTs
-      dn.sub(collBalance.data, collSymbol === "ETH" ? ETH_MAX_RESERVE : 0),
-      dnum18(0),
-    ),
-  );
+  const maxAmount = collBalance.data && (() => {
+    console.log("collBalance.data:", collBalance.data, "type:", typeof collBalance.data, "isArray:", Array.isArray(collBalance.data));
+    if (Array.isArray(collBalance.data)) {
+      console.log("collBalance.data[0]:", collBalance.data[0], "type:", typeof collBalance.data[0]);
+      console.log("collBalance.data[1]:", collBalance.data[1], "type:", typeof collBalance.data[1]);
+    }
+    console.log("ETH_MAX_RESERVE:", ETH_MAX_RESERVE, "DNUM_0:", DNUM_0);
+    const reserve = collSymbol === "ETH" ? ETH_MAX_RESERVE : DNUM_0;
+    console.log("reserve:", reserve);
+    const subtracted = dn.sub(collBalance.data, reserve);
+    console.log("subtracted:", subtracted);
+    return dnumMin(
+      maxCollDeposit,
+      dnumMax(subtracted, DNUM_0),
+    );
+  })();
 
   const isBelowMinDebt = debt.parsed && !debt.isEmpty && dn.lt(debt.parsed, MIN_DEBT);
   const isAboveMaxLtv = loanDetails.ltv && dn.gt(loanDetails.ltv, loanDetails.maxLtv);
@@ -228,7 +236,7 @@ export function BorrowScreen() {
                   icon: <TokenIcon symbol={symbol} />,
                   label: name,
                   value: account.isConnected
-                    ? fmtnum(balances[symbol]?.data ?? 0)
+                    ? fmtnum(balances[symbol]?.data, 2)
                     : "−",
                 }))}
                 menuPlacement="end"

@@ -100,8 +100,8 @@ export function LeverageScreen() {
   const collBalance = balances[collateral.symbol]?.data;
 
   const maxAmount = collBalance && dnumMax(
-    dn.sub(collBalance, collSymbol === "ETH" ? ETH_MAX_RESERVE : 0), // Only keep a reserve for ETH, not LSTs
-    dnum18(0),
+    dn.sub(collBalance, collSymbol === "ETH" ? ETH_MAX_RESERVE : DNUM_0), // Only keep a reserve for ETH, not LSTs
+    DNUM_0,
   );
 
   const newLoan: PositionLoanUncommitted = {
@@ -153,7 +153,7 @@ export function LeverageScreen() {
                   icon: <TokenIcon symbol={symbol} />,
                   label: name,
                   value: account.isConnected
-                    ? fmtnum(balances[symbol]?.data ?? 0)
+                    ? fmtnum(balances[symbol]?.data, 2)
                     : "−",
                 }))}
                 menuPlacement="end"

@@ -444,7 +444,7 @@ function ManualInterestRateSlider({
   const value = useMemo(() => {
     const rate = interestRate?.[0] ?? 0n;
     const chartRates = interestChartData.data?.map(({ rate }) => rate[0]);
-    if (!chartRates) return 0;
+    if (!chartRates || chartRates.length === 0) return -1;
 
     return rateToSliderPosition(rate, chartRates);
   }, [

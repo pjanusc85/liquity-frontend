@@ -33,39 +33,63 @@ async function tryFetch(...args: Parameters<typeof fetch>) {
   }
 }
 
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function graphQuery<TResult, TVariables>(
   query: TypedDocumentString<TResult, TVariables>,
   ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
 ) {
-  const response = await tryFetch(SUBGRAPH_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/graphql-response+json",
-    },
-    body: JSON.stringify(
-      { query, variables },
-      (_, value) => typeof value === "bigint" ? String(value) : value,
-    ),
-  });
+  const maxRetries = 3;
+  const baseDelay = 1000; // 1 second
 
-  if (response === null || !response.ok) {
-    subgraphIndicator.setError("Subgraph error: unable to fetch data.");
-    throw new Error("Error while fetching data from the subgraph");
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await tryFetch(SUBGRAPH_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/graphql-response+json",
+      },
+      body: JSON.stringify(
+        { query, variables },
+        (_, value) => typeof value === "bigint" ? String(value) : value,
+      ),
+    });
+
+    if (response === null || !response.ok) {
+      // Check if it's a rate limit error (429) or server error (5xx)
+      const isRetryable = response?.status === 429 || (response?.status && response.status >= 500);
+
+      if (isRetryable && attempt < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.warn(`Subgraph request failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
+        await sleep(delay);
+        continue;
+      }
+
+      subgraphIndicator.setError("Subgraph error: unable to fetch data.");
+      throw new Error("Error while fetching data from the subgraph");
+    }
+
+    const result = await response.json();
+
+    if (!result.data) {
+      console.error(result);
+      subgraphIndicator.setError("Subgraph error: invalid response.");
+      throw new Error("Invalid response from the subgraph");
+    }
+
+    // successful query: clear previous indicator errors
+    subgraphIndicator.clearError();
+
+    return result.data as TResult;
   }
 
-  const result = await response.json();
-
-  if (!result.data) {
-    console.error(result);
-    subgraphIndicator.setError("Subgraph error: invalid response.");
-    throw new Error("Invalid response from the subgraph");
-  }
-
-  // successful query: clear previous indicator errors
-  subgraphIndicator.clearError();
-
-  return result.data as TResult;
+  // This should never be reached, but TypeScript needs it
+  subgraphIndicator.setError("Subgraph error: unable to fetch data.");
+  throw new Error("Error while fetching data from the subgraph");
 }
 
 const BlockNumberQuery = graphql(`

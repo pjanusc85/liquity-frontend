@@ -428,7 +428,17 @@ export function useAverageInterestRate(branchId: BranchId) {
   const { status, data } = useInterestRateBrackets(branchId);
 
   return useMemo(() => {
-    if (!data) return { status, data };
+    if (!data) {
+      // Fallback to middle of interest rate range when subgraph is unavailable
+      const fallbackRate = dn.div(
+        dn.add(dn.from(INTEREST_RATE_START, 18), dn.from(INTEREST_RATE_END, 18)),
+        2
+      );
+      return {
+        status: "success", // always treat as success with fallback
+        data: fallbackRate
+      };
+    }
 
     let totalDebt = DNUM_0;
     let totalWeightedRate = DNUM_0;
@@ -447,11 +457,48 @@ export function useAverageInterestRate(branchId: BranchId) {
   }, [status, data]);
 }
 
+// Generate fallback chart data when subgraph is unavailable
+function generateFallbackChartData() {
+  const chartData = [];
+  let currentRate = dn.from(INTEREST_RATE_START, 18);
+
+  // Create a uniform distribution for the fallback
+  // This provides a functional slider even when subgraph is down
+  const uniformSize = 0.5; // moderate size for all points
+
+  while (dn.lte(currentRate, INTEREST_RATE_END)) {
+    const nextRate = dn.add(
+      currentRate,
+      dn.lt(currentRate, INTEREST_RATE_PRECISE_UNTIL)
+        ? INTEREST_RATE_INCREMENT_PRECISE
+        : INTEREST_RATE_INCREMENT_NORMAL,
+    );
+
+    chartData.push({
+      debt: DNUM_0,
+      debtInFront: DNUM_0,
+      rate: currentRate,
+      size: uniformSize,
+    });
+
+    currentRate = nextRate;
+  }
+
+  return chartData;
+}
+
 export function useInterestRateChartData(branchId: BranchId, excludedLoan?: PositionLoanCommitted) {
   const { status, data } = useInterestRateBrackets(branchId);
 
   return useMemo(() => {
-    if (!data) return { status, data };
+    // If subgraph data is unavailable, use fallback data
+    // This ensures the slider is always functional
+    if (!data) {
+      return {
+        status: "success", // always treat as success with fallback
+        data: generateFallbackChartData()
+      };
+    }
 
     // brackets or loan could have been updated in the "future", if client clock is running behind
     // or the blockchain clock has been fast-forwarded, e.g. in case of Anvil
@@ -532,7 +579,7 @@ export function useInterestRateChartData(branchId: BranchId, excludedLoan?: Posi
     }
 
     return { status, data: chartData };
-  }, [status, data]);
+  }, [status, data, excludedLoan]);
 }
 
 export function findClosestRateIndex(
