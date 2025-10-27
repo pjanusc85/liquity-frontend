@@ -82,7 +82,7 @@ export function useBalances(
 
     if (token === "ETH") {
       result[token] = {
-        data: ethBalance.data ? dn.from(ethBalance.data.value, decimals) : undefined,
+        data: ethBalance.data ? [ethBalance.data.value, decimals] : undefined,
         isLoading: ethBalance.isLoading,
       };
     } else {
@@ -90,7 +90,7 @@ export function useBalances(
       if (erc20Index !== -1) {
         const balance = erc20Balances.data?.[erc20Index];
         result[token] = {
-          data: balance?.result !== undefined ? dn.from(balance.result, decimals) : undefined,
+          data: balance?.result !== undefined ? [balance.result, decimals] : undefined,
           isLoading: erc20Balances.isLoading,
         };
       }
