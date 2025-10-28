@@ -106,7 +106,9 @@ export function BorrowScreen() {
 
   const nextOwnerIndex = useNextOwnerIndex(account.address ?? null, branch.id);
   // Use fallback value of 0 when subgraph query fails (e.g., due to rate limiting)
-  const ownerIndexValue = nextOwnerIndex.data ?? 0;
+  // TEMPORARY FIX: For cbBTC, use higher index to avoid TroveExists error
+  const ownerIndexValue = collSymbol === "CBBTC" ? (nextOwnerIndex.data ?? 1) : (nextOwnerIndex.data ?? 0);
+  console.log("[BorrowScreen] ownerIndex for", collSymbol, ":", ownerIndexValue, "(from subgraph:", nextOwnerIndex.data, ")");
   const redemptionRisk = useRedemptionRiskOfInterestRate(branch.id, interestRate ?? DNUM_0);
 
   const loanDetails = getLoanDetails(
