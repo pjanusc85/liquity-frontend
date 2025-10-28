@@ -446,7 +446,7 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
             removeManager: ADDRESS_ZERO,
             receiver: ADDRESS_ZERO,
           }],
-          value: ETH_GAS_COMPENSATION[0],
+          // BorrowerOperations.openTroveAndJoinInterestBatchManager is nonpayable - gas compensation is handled internally
         });
       },
 
@@ -486,7 +486,7 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
             ADDRESS_ZERO, // removeManager
             ADDRESS_ZERO, // receiver
           ],
-          value: ETH_GAS_COMPENSATION[0],
+          // BorrowerOperations.openTrove is nonpayable - gas compensation is handled internally
         });
       },
 
