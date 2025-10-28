@@ -16,7 +16,7 @@ export function isInputValueInt(value: string) {
   return inputIntRegex.test(value);
 }
 
-export function parseInputFloat(value: string) {
+export function parseInputFloat(value: string, decimals: number = 18) {
   value = value.trim();
 
   if (!isInputFloat(value)) {
@@ -27,7 +27,7 @@ export function parseInputFloat(value: string) {
     .replace(/\.$/, "")
     .replace(/^\./, "0.");
 
-  return dn.from(value === "" ? 0 : value, 18);
+  return dn.from(value === "" ? 0 : value, decimals);
 }
 
 export function parseInputPercentage(value: string) {

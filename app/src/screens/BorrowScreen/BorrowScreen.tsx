@@ -15,7 +15,7 @@ import { WarningBox } from "@/src/comps/WarningBox/WarningBox";
 import { DEBT_SUGGESTIONS, ETH_MAX_RESERVE, MAX_COLLATERAL_DEPOSITS, MIN_DEBT } from "@/src/constants";
 import content from "@/src/content";
 import { dnum18, DNUM_0, dnumMax, dnumMin } from "@/src/dnum-utils";
-import { useInputFieldValue } from "@/src/form-utils";
+import { parseInputFloat, useInputFieldValue } from "@/src/form-utils";
 import { fmtnum } from "@/src/formatting";
 import { getLiquidationRisk, getLoanDetails, getLtv } from "@/src/liquity-math";
 import {
@@ -70,6 +70,7 @@ export function BorrowScreen() {
   const maxCollDeposit = MAX_COLLATERAL_DEPOSITS[collSymbol];
 
   const deposit = useInputFieldValue(fmtnum, {
+    parse: (value) => parseInputFloat(value, collateral.decimals),
     validate: (parsed, value) => {
       const isAboveMax = parsed && dn.gt(parsed, maxCollDeposit);
       return {
