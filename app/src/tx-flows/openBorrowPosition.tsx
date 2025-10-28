@@ -258,7 +258,7 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
       },
     },
 
-    // Approve for BorrowerOperations (cbBTC)
+    // Approve collateral for BorrowerOperations (cbBTC and other non-ETH collaterals)
     approveBorrowerOps: {
       name: (ctx) => {
         const branch = getBranch(ctx.request.branchId);
@@ -282,6 +282,35 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
             ctx.preferredApproveMethod === "approve-infinite"
               ? maxUint256 // infinite approval
               : ctx.request.collAmount[0], // exact amount
+          ],
+        });
+      },
+      async verify(ctx, hash) {
+        await verifyTransaction(ctx.wagmiConfig, hash, ctx.isSafe);
+      },
+    },
+
+    // Approve WETH for gas compensation (required for all non-ETH collaterals using BorrowerOperations)
+    approveWethForGas: {
+      name: () => "Approve WETH for gas deposit",
+      Status: (props) => (
+        <TransactionStatus
+          {...props}
+          approval="approve-only"
+        />
+      ),
+      async commit(ctx) {
+        const branch = getBranch(ctx.request.branchId);
+        const { BorrowerOperations } = branch.contracts;
+
+        return ctx.writeContract({
+          ...ctx.contracts.WETH,
+          functionName: "approve",
+          args: [
+            BorrowerOperations.address,
+            ctx.preferredApproveMethod === "approve-infinite"
+              ? maxUint256 // infinite approval
+              : ETH_GAS_COMPENSATION[0], // exact amount (0.0375 ETH worth of WETH)
           ],
         });
       },
@@ -431,9 +460,6 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
 
         const branch = getBranch(ctx.request.branchId);
 
-        // For ETH branch, send gas compensation as value; for other collaterals, don't
-        const value = branch.symbol === "ETH" ? ETH_GAS_COMPENSATION[0] : undefined;
-
         return ctx.writeContract({
           ...branch.contracts.BorrowerOperations,
           functionName: "openTroveAndJoinInterestBatchManager",
@@ -450,7 +476,7 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
             removeManager: ADDRESS_ZERO,
             receiver: ADDRESS_ZERO,
           }],
-          ...(value !== undefined && { value }),
+          // No ETH value - gas compensation is handled via WETH.transferFrom
         });
       },
 
@@ -475,8 +501,16 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
 
         const branch = getBranch(ctx.request.branchId);
 
-        // For ETH branch, send gas compensation as value; for other collaterals, don't
-        const value = branch.symbol === "ETH" ? ETH_GAS_COMPENSATION[0] : undefined;
+        console.log("[DEBUG openTrove] Calling with params:", {
+          owner: ctx.request.owner,
+          ownerIndex: ctx.request.ownerIndex,
+          collAmount: ctx.request.collAmount[0].toString(),
+          boldAmount: ctx.request.boldAmount[0].toString(),
+          upperHint: upperHint.toString(),
+          lowerHint: lowerHint.toString(),
+          annualInterestRate: ctx.request.annualInterestRate[0].toString(),
+          maxUpfrontFee: ctx.request.maxUpfrontFee[0].toString(),
+        });
 
         return ctx.writeContract({
           ...branch.contracts.BorrowerOperations,
@@ -494,7 +528,7 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
             ADDRESS_ZERO, // removeManager
             ADDRESS_ZERO, // receiver
           ],
-          ...(value !== undefined && { value }),
+          // No ETH value - gas compensation is handled via WETH.transferFrom
         });
       },
 
@@ -515,17 +549,28 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
 
     // cbBTC uses BorrowerOperations directly instead of zapper
     if (branch.symbol === "CBBTC") {
-      // Check if approval is needed for BorrowerOperations
-      const allowance = await readContract(ctx.wagmiConfig, {
+      const steps: string[] = [];
+
+      // Check if collateral approval is needed for BorrowerOperations
+      const collAllowance = await readContract(ctx.wagmiConfig, {
         ...branch.contracts.CollToken,
         functionName: "allowance",
         args: [ctx.account, branch.contracts.BorrowerOperations.address],
       });
 
-      const steps: string[] = [];
-
-      if (allowance < ctx.request.collAmount[0]) {
+      if (collAllowance < ctx.request.collAmount[0]) {
         steps.push("approveBorrowerOps");
+      }
+
+      // Check if WETH approval is needed for gas compensation
+      const wethAllowance = await readContract(ctx.wagmiConfig, {
+        ...ctx.contracts.WETH,
+        functionName: "allowance",
+        args: [ctx.account, branch.contracts.BorrowerOperations.address],
+      });
+
+      if (wethAllowance < ETH_GAS_COMPENSATION[0]) {
+        steps.push("approveWethForGas");
       }
 
       // Use batch or no-batch version depending on interestRateDelegate
