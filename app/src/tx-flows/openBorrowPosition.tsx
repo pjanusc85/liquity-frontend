@@ -226,7 +226,7 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
   },
 
   steps: {
-    // Approve LST
+    // Approve LST (for zapper)
     approveLst: {
       name: (ctx) => {
         const branch = getBranch(ctx.request.branchId);
@@ -247,6 +247,38 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
           functionName: "approve",
           args: [
             LeverageLSTZapper.address,
+            ctx.preferredApproveMethod === "approve-infinite"
+              ? maxUint256 // infinite approval
+              : ctx.request.collAmount[0], // exact amount
+          ],
+        });
+      },
+      async verify(ctx, hash) {
+        await verifyTransaction(ctx.wagmiConfig, hash, ctx.isSafe);
+      },
+    },
+
+    // Approve for BorrowerOperations (cbBTC)
+    approveBorrowerOps: {
+      name: (ctx) => {
+        const branch = getBranch(ctx.request.branchId);
+        return `Approve ${branch.symbol}`;
+      },
+      Status: (props) => (
+        <TransactionStatus
+          {...props}
+          approval="approve-only"
+        />
+      ),
+      async commit(ctx) {
+        const branch = getBranch(ctx.request.branchId);
+        const { BorrowerOperations, CollToken } = branch.contracts;
+
+        return ctx.writeContract({
+          ...CollToken,
+          functionName: "approve",
+          args: [
+            BorrowerOperations.address,
             ctx.preferredApproveMethod === "approve-infinite"
               ? maxUint256 // infinite approval
               : ctx.request.collAmount[0], // exact amount
@@ -383,6 +415,86 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
         return openBorrowPosition.steps.openTroveLst?.verify(...args);
       },
     },
+
+    // BorrowerOperations direct mode (for cbBTC)
+    openTroveDirectBatch: {
+      name: () => "Open Position",
+      Status: TransactionStatus,
+
+      async commit(ctx) {
+        const { upperHint, lowerHint } = await getTroveOperationHints({
+          wagmiConfig: ctx.wagmiConfig,
+          contracts: ctx.contracts,
+          branchId: ctx.request.branchId,
+          interestRate: ctx.request.annualInterestRate[0],
+        });
+
+        const branch = getBranch(ctx.request.branchId);
+        return ctx.writeContract({
+          ...branch.contracts.BorrowerOperations,
+          functionName: "openTroveAndJoinInterestBatchManager",
+          args: [{
+            owner: ctx.request.owner,
+            ownerIndex: BigInt(ctx.request.ownerIndex),
+            collAmount: ctx.request.collAmount[0],
+            boldAmount: ctx.request.boldAmount[0],
+            upperHint,
+            lowerHint,
+            interestBatchManager: ctx.request.interestRateDelegate ?? ADDRESS_ZERO,
+            maxUpfrontFee: ctx.request.maxUpfrontFee[0],
+            addManager: ADDRESS_ZERO,
+            removeManager: ADDRESS_ZERO,
+            receiver: ADDRESS_ZERO,
+          }],
+          value: ETH_GAS_COMPENSATION[0],
+        });
+      },
+
+      async verify(...args) {
+        // same verification as openTroveLst
+        return openBorrowPosition.steps.openTroveLst?.verify(...args);
+      },
+    },
+
+    // BorrowerOperations direct mode without batch (for cbBTC)
+    openTroveDirectNoBatch: {
+      name: () => "Open Position",
+      Status: TransactionStatus,
+
+      async commit(ctx) {
+        const { upperHint, lowerHint } = await getTroveOperationHints({
+          wagmiConfig: ctx.wagmiConfig,
+          contracts: ctx.contracts,
+          branchId: ctx.request.branchId,
+          interestRate: ctx.request.annualInterestRate[0],
+        });
+
+        const branch = getBranch(ctx.request.branchId);
+        return ctx.writeContract({
+          ...branch.contracts.BorrowerOperations,
+          functionName: "openTrove",
+          args: [
+            ctx.request.owner,
+            BigInt(ctx.request.ownerIndex),
+            ctx.request.collAmount[0],
+            ctx.request.boldAmount[0],
+            upperHint,
+            lowerHint,
+            ctx.request.annualInterestRate[0],
+            ctx.request.maxUpfrontFee[0],
+            ADDRESS_ZERO, // addManager
+            ADDRESS_ZERO, // removeManager
+            ADDRESS_ZERO, // receiver
+          ],
+          value: ETH_GAS_COMPENSATION[0],
+        });
+      },
+
+      async verify(...args) {
+        // same verification as openTroveLst
+        return openBorrowPosition.steps.openTroveLst?.verify(...args);
+      },
+    },
   },
 
   async getSteps(ctx) {
@@ -393,6 +505,32 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
       return ["openTroveEth"];
     }
 
+    // cbBTC uses BorrowerOperations directly instead of zapper
+    if (branch.symbol === "CBBTC") {
+      // Check if approval is needed for BorrowerOperations
+      const allowance = await readContract(ctx.wagmiConfig, {
+        ...branch.contracts.CollToken,
+        functionName: "allowance",
+        args: [ctx.account, branch.contracts.BorrowerOperations.address],
+      });
+
+      const steps: string[] = [];
+
+      if (allowance < ctx.request.collAmount[0]) {
+        steps.push("approveBorrowerOps");
+      }
+
+      // Use batch or no-batch version depending on interestRateDelegate
+      if (ctx.request.interestRateDelegate) {
+        steps.push("openTroveDirectBatch");
+      } else {
+        steps.push("openTroveDirectNoBatch");
+      }
+
+      return steps;
+    }
+
+    // For other LSTs (wstETH, rETH), use the zapper
     // Check if approval is needed
     const allowance = await readContract(ctx.wagmiConfig, {
       ...branch.contracts.CollToken,
