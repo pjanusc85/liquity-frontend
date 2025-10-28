@@ -312,16 +312,29 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
           throw new Error("Failed to extract trove ID from transaction");
         }
 
-        // wait for the trove to appear in the subgraph
-        while (true) {
-          const trove = await getIndexedTroveById(
-            branch.branchId,
-            `0x${troveOperation.args._troveId.toString(16)}`,
-          );
-          if (trove !== null) {
-            break;
+        // wait for the trove to appear in the subgraph with retry limit
+        const maxRetries = 10;
+        let retries = 0;
+        while (retries < maxRetries) {
+          try {
+            const trove = await getIndexedTroveById(
+              branch.branchId,
+              `0x${troveOperation.args._troveId.toString(16)}`,
+            );
+            if (trove !== null) {
+              break;
+            }
+          } catch (error) {
+            // If subgraph is failing (e.g., rate limited), log but continue after max retries
+            console.warn(`Subgraph query failed (attempt ${retries + 1}/${maxRetries}):`, error);
+            if (retries === maxRetries - 1) {
+              console.warn("Max retries reached. Transaction was successful but subgraph indexing may be delayed.");
+              // Transaction was successful on-chain, so we can safely proceed
+              break;
+            }
           }
-          await sleep(1000);
+          retries++;
+          await sleep(2000); // Wait 2 seconds between retries
         }
       },
     },

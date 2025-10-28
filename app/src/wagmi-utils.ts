@@ -76,10 +76,16 @@ export function useBalances(
   // combine results
   return tokens.reduce((result, token) => {
     // Get the decimals for this token
-    const tokenInfo = getToken(token);
+    let tokenInfo;
+    try {
+      tokenInfo = getToken(token);
+    } catch (error) {
+      console.error("Failed to get token info for:", token, error);
+      tokenInfo = undefined;
+    }
     const decimals = tokenInfo?.decimals ?? 18; // Default to 18 if undefined
 
-    console.log("Token:", token, "Decimals:", decimals, "TokenInfo:", tokenInfo);
+    console.log("Token:", token, "Decimals:", decimals, "TokenInfo:", tokenInfo, "Has decimals:", tokenInfo?.decimals);
 
     if (token === "ETH") {
       result[token] = {

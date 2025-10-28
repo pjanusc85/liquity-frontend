@@ -132,11 +132,9 @@ export const InterestRateField = memo(
       },
 
       onChange: ({ parsed }) => {
-        console.log("InterestRateField onChange called with parsed:", parsed);
         if (parsed) {
           rateTouchedForBranch.current = branchId;
           const interestRate = dn.div(parsed, 100);
-          console.log("Calling parent onChange with interestRate:", interestRate);
           onChange(interestRate);
         }
       },

@@ -135,7 +135,7 @@ export const COLLATERALS: CollateralToken[] = [
   CBBTC,
 ];
 
-export const TOKENS_BY_SYMBOL = {
+export const TOKENS_BY_SYMBOL: Record<TokenSymbol, Token> = {
   BOLD,
   CBBTC,
   ETH,
@@ -144,4 +144,4 @@ export const TOKENS_BY_SYMBOL = {
   RETH,
   SBOLD,
   WSTETH,
-} as const;
+};

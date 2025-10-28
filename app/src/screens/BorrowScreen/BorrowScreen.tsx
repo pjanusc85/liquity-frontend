@@ -82,12 +82,6 @@ export function BorrowScreen() {
   const debt = useInputFieldValue(fmtnum);
 
   const [interestRate, setInterestRate] = useState<null | Dnum>(null);
-
-  // Debug wrapper
-  const setInterestRateWithLog = useCallback((rate: Dnum) => {
-    console.log("BorrowScreen: setInterestRate called with:", rate);
-    setInterestRate(rate);
-  }, []);
   const [interestRateMode, setInterestRateMode] = useState<DelegateMode>("manual");
   const [interestRateDelegate, setInterestRateDelegate] = useState<Address | null>(null);
   const [agreeToLiquidationRisk, setAgreeToLiquidationRisk] = useState(false);
@@ -96,9 +90,8 @@ export function BorrowScreen() {
 
   const setInterestRateRounded = useCallback((averageInterestRate: Dnum, setValue: (value: string) => void) => {
     const rounded = dn.div(dn.round(dn.mul(averageInterestRate, 1e4)), 1e4);
-    console.log("setInterestRateRounded called with:", averageInterestRate, "rounded:", rounded);
     setValue(dn.toString(dn.mul(rounded, 100)));
-  }, [setInterestRate]);
+  }, []);
 
   const collPrice = usePrice(collateral.symbol);
 
@@ -159,16 +152,8 @@ export function BorrowScreen() {
     : null;
 
   const maxAmount = collBalance.data && (() => {
-    console.log("collBalance.data:", collBalance.data, "type:", typeof collBalance.data, "isArray:", Array.isArray(collBalance.data));
-    if (Array.isArray(collBalance.data)) {
-      console.log("collBalance.data[0]:", collBalance.data[0], "type:", typeof collBalance.data[0]);
-      console.log("collBalance.data[1]:", collBalance.data[1], "type:", typeof collBalance.data[1]);
-    }
-    console.log("ETH_MAX_RESERVE:", ETH_MAX_RESERVE, "DNUM_0:", DNUM_0);
     const reserve = collSymbol === "ETH" ? ETH_MAX_RESERVE : DNUM_0;
-    console.log("reserve:", reserve);
     const subtracted = dn.sub(collBalance.data, reserve);
-    console.log("subtracted:", subtracted);
     return dnumMin(
       maxCollDeposit,
       dnumMax(subtracted, DNUM_0),
@@ -219,15 +204,6 @@ export function BorrowScreen() {
         : interestRateDelegate,
     }
     : undefined;
-
-  console.log("=== BUTTON STATE DEBUG ===");
-  console.log("allowSubmit:", allowSubmit);
-  console.log("account.address:", account.address);
-  console.log("nextOwnerIndex.data:", nextOwnerIndex.data);
-  console.log("ownerIndexValue (with fallback):", ownerIndexValue);
-  console.log("requestReady:", requestReady);
-  console.log("flowRequest:", flowRequest ? "DEFINED" : "UNDEFINED");
-  console.log("========================");
 
   return (
     <Screen
@@ -432,7 +408,7 @@ export function BorrowScreen() {
             interestRate={interestRate}
             mode={interestRateMode}
             onAverageInterestRateLoad={setInterestRateRounded}
-            onChange={setInterestRateWithLog}
+            onChange={setInterestRate}
             onDelegateChange={setInterestRateDelegate}
             onModeChange={setInterestRateMode}
           />
