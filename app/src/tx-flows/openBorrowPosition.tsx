@@ -430,6 +430,10 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
         });
 
         const branch = getBranch(ctx.request.branchId);
+
+        // For ETH branch, send gas compensation as value; for other collaterals, don't
+        const value = branch.symbol === "ETH" ? ETH_GAS_COMPENSATION[0] : undefined;
+
         return ctx.writeContract({
           ...branch.contracts.BorrowerOperations,
           functionName: "openTroveAndJoinInterestBatchManager",
@@ -446,7 +450,7 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
             removeManager: ADDRESS_ZERO,
             receiver: ADDRESS_ZERO,
           }],
-          // BorrowerOperations.openTroveAndJoinInterestBatchManager is nonpayable - gas compensation is handled internally
+          ...(value !== undefined && { value }),
         });
       },
 
@@ -470,6 +474,10 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
         });
 
         const branch = getBranch(ctx.request.branchId);
+
+        // For ETH branch, send gas compensation as value; for other collaterals, don't
+        const value = branch.symbol === "ETH" ? ETH_GAS_COMPENSATION[0] : undefined;
+
         return ctx.writeContract({
           ...branch.contracts.BorrowerOperations,
           functionName: "openTrove",
@@ -486,7 +494,7 @@ export const openBorrowPosition: FlowDeclaration<OpenBorrowPositionRequest> = {
             ADDRESS_ZERO, // removeManager
             ADDRESS_ZERO, // receiver
           ],
-          // BorrowerOperations.openTrove is nonpayable - gas compensation is handled internally
+          ...(value !== undefined && { value }),
         });
       },
 
